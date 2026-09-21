@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import { ChevronLeft, ChevronRight, ChevronRight as ArrowRightIcon, Zap, Store, Sparkles, Layers } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronRight as ArrowRightIcon, Zap, Sparkles, Layers } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getBanners } from "@/services/banner.api";
 import { getFlashSaleProducts } from "@/services/product.api";
-import { getFeaturedVendor } from "@/services/vendor.api";
 import { getCategoriesWithCounts } from "@/services/category.api";
 import { buildCategoryTree } from "@/utils/categoryTree";
 import CountdownTimer from "./CountdownTimer";
@@ -56,14 +55,6 @@ export default function Hero({ initialData }) {
     gcTime: 1000 * 60 * 30,
   });
 
-  // Featured Vendor query
-  const { data: featuredVendorData } = useQuery({
-    queryKey: ["featured-vendor"],
-    queryFn: getFeaturedVendor,
-    staleTime: 1000 * 60 * 1, // 1 minute cache
-    gcTime: 1000 * 60 * 30,
-  });
-
   // Top Categories with Product Counts query
   const { data: topCategoriesData } = useQuery({
     queryKey: ["topCategoriesWithCounts"],
@@ -72,11 +63,16 @@ export default function Hero({ initialData }) {
   });
 
   const topCategories = useMemo(() => {
-    const raw = Array.isArray(topCategoriesData) ? topCategoriesData : [];
+    const raw = Array.isArray(topCategoriesData)
+      ? topCategoriesData
+      : Array.isArray(topCategoriesData?.categories)
+      ? topCategoriesData.categories
+      : [];
     const tree = buildCategoryTree(raw);
-    return [...tree]
+    const list = tree.length > 0 ? tree : raw;
+    return [...list]
       .sort((a, b) => (b.productCount || 0) - (a.productCount || 0))
-      .slice(0, 8);
+      .slice(0, 6);
   }, [topCategoriesData]);
 
   const banners = useMemo(() => {
@@ -87,8 +83,6 @@ export default function Hero({ initialData }) {
   const flashProducts = useMemo(() => {
     return flashData?.products || [];
   }, [flashData]);
-
-  const featuredVendor = featuredVendorData?.vendor || null;
 
   return (
     <section id="hero" className="relative overflow-hidden py-4 sm:py-5">
@@ -148,65 +142,62 @@ export default function Hero({ initialData }) {
           {/* ================= RIGHT COLUMN: PROMO CARDS (Featured Store + Flash Deal) ================= */}
           <div className="hidden lg:col-span-4 xl:col-span-3 lg:flex lg:flex-col justify-between gap-3.5 h-full overflow-hidden">
 
-            {/* Card 1: Featured Store (Top Vendor by Order Count) */}
+            {/* Card 1: Top Categories Highlight */}
             <div className="rounded-2xl border border-purple-200 bg-purple-50/40 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between gap-3 shrink-0 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 border border-sky-200/80 px-2.5 py-1 text-xs font-bold text-sky-700 dark:bg-sky-950/40 dark:border-sky-900/50 dark:text-sky-300">
-                  <Sparkles className="size-3.5 text-sky-700 dark:text-sky-300" /> Featured Store
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 border border-purple-200/80 px-2.5 py-1 text-xs font-bold text-purple-700 dark:bg-purple-950/40 dark:border-purple-900/50 dark:text-purple-300">
+                  <Sparkles className="size-3.5 text-purple-700 dark:text-purple-300" /> Top Categories
                 </span>
-                <Store className="size-4 text-slate-400 dark:text-slate-500" />
+                <Link
+                  href="/products"
+                  className="text-xs font-extrabold text-purple-700 dark:text-purple-300 hover:underline flex items-center gap-0.5"
+                >
+                  View All <ChevronRight className="size-3.5" />
+                </Link>
               </div>
 
-              {featuredVendor ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    {featuredVendor.vendorInfo?.shopLogo || featuredVendor.avatar ? (
-                      <img
-                        src={featuredVendor.vendorInfo?.shopLogo || featuredVendor.avatar}
-                        alt={featuredVendor.vendorInfo?.shopName || featuredVendor.name}
-                        className="size-12 rounded-2xl object-cover border border-slate-200/60 bg-white shrink-0 shadow-2xs dark:border-slate-800"
-                      />
-                    ) : (
-                      <div className="size-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-lg font-black text-primary dark:text-sky-300 shrink-0 border border-slate-200 shadow-2xs">
-                        {(featuredVendor.vendorInfo?.shopName || featuredVendor.name || "S").charAt(0).toUpperCase()}
+              {topCategories.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2 my-0.5">
+                  {topCategories.slice(0, 4).map((cat) => (
+                    <Link
+                      key={cat._id || cat.slug}
+                      href={`/products?category=${cat.slug}`}
+                      className="group flex items-center gap-2 rounded-xl border border-purple-100 bg-white p-2 hover:border-purple-400 hover:bg-purple-50/70 hover:shadow-xs transition-all dark:bg-slate-800/80 dark:border-slate-700/60 dark:hover:border-purple-500"
+                    >
+                      {cat.image ? (
+                        <img
+                          src={cat.image}
+                          alt={cat.name}
+                          className="size-9 rounded-lg object-cover shrink-0 border border-slate-100 dark:border-slate-700 group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="size-9 rounded-lg bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                          <Layers className="size-4 text-purple-600 dark:text-purple-300" />
+                        </div>
+                      )}
+                      <div className="truncate min-w-0 flex-1">
+                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+                          {cat.name}
+                        </h5>
+                        <span className="text-[10px] text-slate-400 font-semibold block truncate">
+                          {cat.productCount ? `${cat.productCount} Items` : "Explore"}
+                        </span>
                       </div>
-                    )}
-                    <div className="truncate flex-1 min-w-0">
-                      <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
-                        {featuredVendor.vendorInfo?.shopName || featuredVendor.name || "Featured Store"}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 font-medium">
-                        {featuredVendor.email}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/products?vendor=${featuredVendor._id}`}
-                    className="block w-full rounded-full btn-action-gold py-1.5 text-center text-xs sm:text-sm font-bold text-white transition-all shadow-xs cursor-pointer"
-                  >
-                    Visit Store
-                  </Link>
+                    </Link>
+                  ))}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="size-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-lg font-black text-primary shrink-0 border border-slate-200 shadow-2xs">
-                      S
-                    </div>
-                    <div className="truncate flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">Kids Item Shop Verified Store</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 font-medium">vendor@kidsitemshop.com</p>
-                    </div>
-                  </div>
-                  <Link
-                    href="/products"
-                    className="block w-full rounded-full btn-action-gold py-1.5 text-center text-xs sm:text-sm font-bold text-white transition-all shadow-xs cursor-pointer"
-                  >
-                    Visit Store
-                  </Link>
+                <div className="py-4 text-center text-xs text-slate-400 font-medium">
+                  Loading categories...
                 </div>
               )}
+
+              <Link
+                href="/products"
+                className="block w-full rounded-full btn-action-gold py-1.5 text-center text-xs sm:text-sm font-bold text-white transition-all shadow-xs cursor-pointer"
+              >
+                Explore All Categories
+              </Link>
             </div>
 
             {/* Card 2: Daily Flash Sale Highlight */}
