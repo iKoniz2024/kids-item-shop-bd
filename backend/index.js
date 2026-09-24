@@ -27,6 +27,7 @@ const port = process.env.PORT || 5000;
 const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, "") : "";
 const allowedOrigins = [
     clientUrl,
+    "https://www.kidsitem.store",
     "https://kidsitemshop.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
