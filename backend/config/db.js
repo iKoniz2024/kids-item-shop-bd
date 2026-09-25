@@ -26,21 +26,30 @@ const client = new MongoClient(uri, {
 
 let db;
 let isInitialized = false;
+let cachedPromise = null;
 
 async function connectDB() {
     if (db) return db;
-    await client.connect();
-    db = client.db("KidsItemShopBD");
 
-    console.log("MongoDB Connected");
+    if (!cachedPromise) {
+        cachedPromise = client.connect().then(() => {
+            db = client.db("KidsItemShopBD");
+            console.log("MongoDB Connected");
 
-    if (!isInitialized) {
-        isInitialized = true;
-        setupIndexes(db).catch(err => console.error("Setup indexes error:", err));
-        warmUpCache(db).catch(err => console.error("Startup warmup error:", err));
+            // Only run index setup locally, NOT on every serverless function cold boot in Vercel
+            if (!process.env.VERCEL && !isInitialized) {
+                isInitialized = true;
+                setupIndexes(db).catch(err => console.error("Setup indexes error:", err.message));
+                warmUpCache(db).catch(err => console.error("Startup warmup error:", err.message));
+            }
+            return db;
+        }).catch(err => {
+            cachedPromise = null;
+            throw err;
+        });
     }
 
-    return db;
+    return cachedPromise;
 }
 
 function getDB() {
