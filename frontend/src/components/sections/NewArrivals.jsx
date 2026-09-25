@@ -63,6 +63,7 @@ export default function NewArrivals({ initialData }) {
           <div className="flex items-center gap-4">
             <button
               onClick={() => scroll("left")}
+              aria-label="Previous products"
               className="hidden sm:flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
             >
               <ChevronLeft className="size-4" />
@@ -72,6 +73,7 @@ export default function NewArrivals({ initialData }) {
             </h2>
             <button
               onClick={() => scroll("right")}
+              aria-label="Next products"
               className="hidden sm:flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
             >
               <ChevronRight className="size-4" />

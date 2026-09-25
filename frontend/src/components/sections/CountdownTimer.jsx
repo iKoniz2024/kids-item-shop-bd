@@ -26,7 +26,7 @@ function TimeUnit({ value, label, size = "md" }) {
           {String(value).padStart(2, "0")}
         </span>
       </div>
-      <span className={`mt-1 font-bold uppercase tracking-wider text-[#D97706] ${isSm ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-xs"}`}>
+      <span className={`mt-1 font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 ${isSm ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-xs"}`}>
         {label}
       </span>
     </div>

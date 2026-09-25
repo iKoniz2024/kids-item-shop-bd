@@ -54,7 +54,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-border bg-[#6D28D9] text-white dark:bg-slate-950 dark:text-white">
+    <footer className="border-t border-border bg-[#6D28D9] text-white dark:bg-slate-950 dark:text-white pb-20 lg:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Logo & Description */}
@@ -71,7 +71,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#F472B6]">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-pink-200">
               Quick Links
             </h3>
             <ul className="space-y-2.5">
@@ -90,7 +90,7 @@ export default function Footer() {
 
           {/* Services & Help */}
           <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#F472B6]">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-pink-200">
               Services & Help
             </h3>
             <ul className="space-y-2.5">

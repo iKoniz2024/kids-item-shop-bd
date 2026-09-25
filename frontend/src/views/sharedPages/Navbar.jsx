@@ -25,13 +25,18 @@ const Navbar = () => {
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [mobileCatOpen, setMobileCatOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [desktopCatOpen, setDesktopCatOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef(null);
+    const catRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setProfileOpen(false);
+            }
+            if (catRef.current && !catRef.current.contains(event.target)) {
+                setDesktopCatOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -79,8 +84,8 @@ const Navbar = () => {
             {/* Top Header */}
             <div className="bg-[#7C3AED] dark:bg-slate-950">
                 <div className="mx-auto flex h-14 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-4 gap-2">
-                    {/* Left: Mobile Menu Button (Mobile) / Desktop Logo */}
-                    <div className="flex items-center gap-2 shrink-0 md:hidden">
+                    {/* Left: Mobile/Tablet Menu Button (< lg) / Desktop Logo */}
+                    <div className="flex items-center gap-2 shrink-0 lg:hidden">
                         <button
                             onClick={() => setMobileOpen(true)}
                             className="flex size-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 cursor-pointer"
@@ -90,32 +95,32 @@ const Navbar = () => {
                         </button>
                     </div>
 
-                    {/* Logo (Centered on Mobile, Left-aligned on Desktop) */}
-                    <div className="flex items-center justify-center md:justify-start shrink-0">
+                    {/* Logo */}
+                    <div className="flex items-center justify-center lg:justify-start shrink-0">
                         <Link href="/" className="flex items-center">
                             {logo ? (
-                                <img src={logo} alt={siteName || "Logo"} className="h-8 sm:h-12 w-auto object-contain" />
+                                <img src={logo} alt={siteName || "Logo"} className="h-8 sm:h-11 w-auto object-contain" />
                             ) : siteName ? (
-                                <span suppressHydrationWarning className="text-lg sm:text-2xl font-black text-white dark:text-accent tracking-tight truncate max-w-[180px] sm:max-w-none">
+                                <span suppressHydrationWarning className="text-lg sm:text-2xl font-black text-white dark:text-accent tracking-tight truncate max-w-[160px] sm:max-w-none">
                                     {siteName}
                                 </span>
                             ) : null}
                         </Link>
                     </div>
 
-                    {/* Desktop Eye-Friendly Search Bar */}
-                    <div className="hidden flex-1 max-w-2xl md:block">
+                    {/* Desktop Eye-Friendly Search Bar (>= lg) */}
+                    <div className="hidden flex-1 max-w-xl lg:block mx-3">
                         <form onSubmit={handleSearchSubmit} className="flex items-center w-full rounded-full border border-white/20 bg-white p-1 focus-within:border-[#EC4899] focus-within:ring-2 focus-within:ring-[#EC4899]/30 transition-all shadow-2xs dark:bg-slate-800 dark:border-slate-700">
                             <input
                                 type="text"
                                 placeholder="Search kids toys, electronic learning toys, clothes, shoes..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="w-full h-6 bg-transparent pl-3.5 pr-2 text-xs sm:text-sm text-slate-800 dark:text-foreground placeholder:text-muted-foreground outline-none"
+                                className="flex-1 min-w-0 h-8 bg-transparent px-4 text-xs sm:text-sm text-slate-800 dark:text-foreground placeholder:text-muted-foreground outline-none"
                             />
                             <button
                                 type="submit"
-                                className="flex h-8 px-6 shrink-0 items-center gap-1.5 justify-center rounded-full btn-action-gold text-xs font-bold shadow-xs transition-all hover:scale-105 cursor-pointer"
+                                className="flex h-8 px-5 shrink-0 items-center gap-1.5 justify-center rounded-full btn-action-gold text-xs font-bold shadow-xs transition-all hover:scale-105 cursor-pointer"
                                 title="Search"
                             >
                                 <Search className="size-3.5 text-white" />
@@ -124,12 +129,12 @@ const Navbar = () => {
                         </form>
                     </div>
 
-                    {/* Right Utilities (Mobile & Desktop) */}
-                    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-                        {/* Mobile Search Toggle Button */}
+                    {/* Right Utilities (Mobile, Tablet & Desktop) */}
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                        {/* Mobile/Tablet Search Toggle Button */}
                         <button
                             onClick={() => setMobileSearchOpen((prev) => !prev)}
-                            className="flex size-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/20 md:hidden cursor-pointer"
+                            className="flex size-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/20 lg:hidden cursor-pointer"
                             title="Toggle Search"
                         >
                             <Search className="size-4.5 text-white" />
@@ -137,7 +142,7 @@ const Navbar = () => {
 
                         <Link
                             href="/orders"
-                            className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-white/20 md:flex shrink-0 shadow-2xs group"
+                            className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition-all hover:bg-white/20 xl:flex shrink-0 shadow-2xs group"
                         >
                             <Package className="size-4 shrink-0 text-[#F472B6]" />
                             <span>Track Order</span>
@@ -146,14 +151,14 @@ const Navbar = () => {
                         {mounted && contactPhone && (
                             <a
                                 href={`tel:${contactPhone}`}
-                                className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-white/20 md:flex shrink-0 shadow-2xs"
+                                className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition-all hover:bg-white/20 xl:flex shrink-0 shadow-2xs"
                             >
                                 <Phone className="size-4 shrink-0 text-[#F472B6]" />
                                 <span>{contactPhone}</span>
                             </a>
                         )}
 
-                        <div className="hidden h-6 w-px bg-white/20 md:block" />
+                        <div className="hidden h-6 w-px bg-white/20 lg:block" />
 
                         <button
                             onClick={toggleTheme}
@@ -166,6 +171,8 @@ const Navbar = () => {
                         {(!user || (user.role !== "admin" && user.role !== "vendor")) && (
                             <Link
                                 href="/cart"
+                                aria-label="View Shopping Cart"
+                                title="Shopping Cart"
                                 className="relative flex size-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/20 hover:scale-105"
                             >
                                 <ShoppingCart className="size-4.5 text-white" />
@@ -264,64 +271,71 @@ const Navbar = () => {
             {/* Second Navigation Bar */}
             <nav className="hidden border-t border-white/10 md:block bg-[#6D28D9] dark:bg-slate-900 dark:border-slate-800">
                 <div className="relative mx-auto max-w-7xl px-4">
-                    <div className="flex h-12 sm:h-13 items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                            <Link href="/" className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all ${pathname === "/" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}>
+                    <div className="flex h-12 sm:h-13 items-center justify-between gap-2 overflow-visible">
+                        <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-3 flex-1 min-w-0 overflow-visible">
+                            <Link href="/" className={`flex items-center gap-1.5 rounded-xl px-2.5 lg:px-3.5 py-1.5 text-xs lg:text-sm font-bold transition-all shrink-0 ${pathname === "/" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}>
                                 <House className="size-4 text-[#F472B6]" />
                                 <span>Home</span>
                             </Link>
 
                             {/* Categories Mega Dropdown */}
-                            <div className="group/cat">
-                                <button className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold text-white hover:bg-white/10 hover:text-[#F472B6] transition-all cursor-pointer">
+                            <div ref={catRef} className="group/cat relative shrink-0">
+                                <button
+                                    onClick={() => setDesktopCatOpen((prev) => !prev)}
+                                    className="flex items-center gap-1.5 rounded-xl px-2.5 lg:px-3.5 py-1.5 text-xs lg:text-sm font-bold text-white hover:bg-white/10 hover:text-[#F472B6] transition-all cursor-pointer"
+                                >
                                     <LayoutGrid className="size-4 text-[#F472B6]" />
                                     <span>Categories</span>
-                                    <ChevronDown className="size-3.5 text-white/70 group-hover/cat:rotate-180 transition-transform duration-200" />
+                                    <ChevronDown className={`size-3.5 text-white/70 transition-transform duration-200 ${desktopCatOpen ? "rotate-180" : "group-hover/cat:rotate-180"}`} />
                                 </button>
 
                                 {/* Mega Dropdown Menu */}
-                                <div className="invisible opacity-0 group-hover/cat:visible group-hover/cat:opacity-100 transition-all duration-200 absolute left-4 right-4 top-full z-100 mt-1 rounded-2xl border border-purple-100 bg-card p-6 shadow-2xl text-foreground">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 max-h-[420px] overflow-y-auto pr-1">
-                                        {categoriesList && categoriesList.length > 0 ? (
-                                            categoriesList.map((cat, idx) => (
-                                                <div key={cat._id || `${cat.slug || 'cat'}-${idx}`} className="space-y-2">
-                                                    <Link
-                                                        href={`/products?category=${cat.slug}`}
-                                                        className="block text-sm sm:text-base font-extrabold text-foreground hover:text-primary transition-colors truncate"
-                                                    >
-                                                        {cat.name}
-                                                    </Link>
-                                                    {cat.children && cat.children.length > 0 && (
-                                                        <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground font-medium">
-                                                            {cat.children.map((child, cIdx) => (
-                                                                <li key={child._id || `${child.slug || 'child'}-${cIdx}`}>
-                                                                    <Link
-                                                                        href={`/products?category=${child.slug}`}
-                                                                        className="hover:text-primary hover:underline block truncate transition-colors"
-                                                                    >
-                                                                        {child.name}
-                                                                    </Link>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    )}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-xs text-muted-foreground col-span-full">Loading categories...</p>
-                                        )}
+                                <div className={`${desktopCatOpen ? "visible opacity-100" : "invisible opacity-0 group-hover/cat:visible group-hover/cat:opacity-100"} transition-all duration-200 absolute left-0 sm:-left-4 md:-left-8 lg:left-0 right-auto top-full pt-1.5 z-100 w-[90vw] max-w-5xl`}>
+                                    <div className="rounded-2xl border border-purple-100 bg-card p-6 shadow-2xl text-foreground">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 max-h-[420px] overflow-y-auto pr-1">
+                                            {categoriesList && categoriesList.length > 0 ? (
+                                                categoriesList.map((cat, idx) => (
+                                                    <div key={cat._id || `${cat.slug || 'cat'}-${idx}`} className="space-y-2">
+                                                        <Link
+                                                            href={`/products?category=${cat.slug}`}
+                                                            onClick={() => setDesktopCatOpen(false)}
+                                                            className="block text-sm sm:text-base font-extrabold text-foreground hover:text-primary transition-colors truncate"
+                                                        >
+                                                            {cat.name}
+                                                        </Link>
+                                                        {cat.children && cat.children.length > 0 && (
+                                                            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground font-medium">
+                                                                {cat.children.map((child, cIdx) => (
+                                                                    <li key={child._id || `${child.slug || 'child'}-${cIdx}`}>
+                                                                        <Link
+                                                                            href={`/products?category=${child.slug}`}
+                                                                            onClick={() => setDesktopCatOpen(false)}
+                                                                            className="hover:text-primary hover:underline block truncate transition-colors"
+                                                                        >
+                                                                            {child.name}
+                                                                        </Link>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        )}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-xs text-muted-foreground col-span-full">Loading categories...</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <Link href="/products" className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all ${pathname === "/products" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}>
+                            <Link href="/products" className={`flex items-center gap-1.5 rounded-xl px-2.5 lg:px-3.5 py-1.5 text-xs lg:text-sm font-bold transition-all shrink-0 ${pathname === "/products" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}>
                                 <Store className="size-4 text-[#F472B6]" />
                                 <span>Shop Products</span>
                             </Link>
 
                             <Link
                                 href="/best-selling"
-                                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all ${pathname === "/best-selling" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}
+                                className={`flex items-center gap-1.5 rounded-xl px-2.5 lg:px-3.5 py-1.5 text-xs lg:text-sm font-bold transition-all shrink-0 ${pathname === "/best-selling" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}
                             >
                                 <TrendingUp className="size-4 text-[#F472B6]" />
                                 <span>Best Selling</span>
@@ -329,17 +343,17 @@ const Navbar = () => {
 
                             <Link
                                 href="/flash-sale"
-                                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all ${pathname === "/flash-sale" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}
+                                className={`flex items-center gap-1.5 rounded-xl px-2.5 lg:px-3.5 py-1.5 text-xs lg:text-sm font-bold transition-all shrink-0 ${pathname === "/flash-sale" ? "bg-white/20 text-[#F472B6] border border-white/30 shadow-2xs" : "text-white hover:bg-white/10 hover:text-[#F472B6]"}`}
                             >
                                 <Zap className="size-4 text-[#F472B6] fill-[#F472B6]/20" />
                                 <span>Flash Deals</span>
                             </Link>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0 ml-auto">
                             <Link
                                 href="/become-seller"
-                                className="flex items-center gap-1.5 rounded-full btn-action-gold px-4 py-1.5 text-xs font-bold transition-all hover:scale-105 shadow-2xs"
+                                className="flex items-center gap-1.5 rounded-full btn-action-gold px-3 sm:px-4 py-1.5 text-xs font-bold transition-all hover:scale-105 shadow-2xs shrink-0"
                             >
                                 <Sparkles className="size-3.5 text-white" />
                                 <span>Become a Seller</span>
@@ -349,9 +363,9 @@ const Navbar = () => {
                 </div>
             </nav>
 
-            {/* Mobile Drawer */}
+            {/* Mobile/Tablet Drawer */}
             {mobileOpen && (
-                <div className="fixed inset-0 z-100 md:hidden">
+                <div className="fixed inset-0 z-100 lg:hidden">
                     <div
                         className="absolute inset-0 bg-black/60 backdrop-blur-xs"
                         onClick={() => setMobileOpen(false)}
@@ -499,9 +513,9 @@ const Navbar = () => {
             )}
         </header>
 
-        {/* Fixed Mobile Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-90 bg-card/95 backdrop-blur-md border-t border-border py-1.5 px-2 md:hidden shadow-lg shadow-black/10">
-            <div className="flex items-center justify-around max-w-md mx-auto">
+        {/* Fixed Mobile & Tablet Bottom Navigation Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-90 bg-card/95 backdrop-blur-md border-t border-border py-1.5 px-2 lg:hidden shadow-lg shadow-black/10">
+            <div className="flex items-center justify-around w-full max-w-7xl mx-auto px-2 sm:px-6">
                 <Link
                     href="/"
                     className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 transition-colors ${

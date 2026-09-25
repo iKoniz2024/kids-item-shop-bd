@@ -90,10 +90,10 @@ export default function Hero({ initialData }) {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Parent container bounding Banner Slider & Right Promo Cards */}
-        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-12 lg:items-stretch">
+        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-12 md:items-stretch">
 
-          {/* ================= MAIN BANNER SLIDER (Takes 8 columns or 9 columns) ================= */}
-          <div className="lg:col-span-8 xl:col-span-9 flex flex-col justify-center aspect-[12/5] w-full">
+          {/* ================= MAIN BANNER SLIDER (Takes 7 columns on tablet, 8/9 on desktop) ================= */}
+          <div className="md:col-span-7 lg:col-span-8 xl:col-span-9 flex flex-col justify-center aspect-[12/5] w-full">
             {isBannerLoading ? (
               <div className="flex size-full items-center justify-center rounded-none border border-border bg-muted/30">
                 <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -112,13 +112,15 @@ export default function Hero({ initialData }) {
                   loop={banners.length > 1}
                   className="hero-swiper size-full"
                 >
-                  {banners.map((banner) => (
+                  {banners.map((banner, index) => (
                     <SwiperSlide key={banner._id}>
                       <Link href={banner.link || "/products"} className="block size-full relative overflow-hidden bg-slate-950 flex items-center justify-center">
                         <img
                           src={banner.image || banner.images?.[0] || banner.thumbnail}
                           alt={banner.title || "Promotional Banner"}
                           className="size-full object-cover object-center"
+                          fetchPriority={index === 0 ? "high" : "low"}
+                          loading={index === 0 ? "eager" : "lazy"}
                         />
                       </Link>
                     </SwiperSlide>
@@ -126,10 +128,10 @@ export default function Hero({ initialData }) {
 
                   {banners.length > 1 && (
                     <>
-                      <button className="hero-prev absolute left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-background hover:scale-105">
+                      <button aria-label="Previous Banner" className="hero-prev absolute left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-background hover:scale-105">
                         <ChevronLeft className="size-5" />
                       </button>
-                      <button className="hero-next absolute right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-background hover:scale-105">
+                      <button aria-label="Next Banner" className="hero-next absolute right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-all hover:bg-background hover:scale-105">
                         <ChevronRight className="size-5" />
                       </button>
                     </>
@@ -140,7 +142,7 @@ export default function Hero({ initialData }) {
           </div>
 
           {/* ================= RIGHT COLUMN: PROMO CARDS (Featured Store + Flash Deal) ================= */}
-          <div className="hidden lg:col-span-4 xl:col-span-3 lg:flex lg:flex-col justify-between gap-3.5 h-full overflow-hidden">
+          <div className="hidden md:col-span-5 md:flex md:flex-col lg:col-span-4 xl:col-span-3 justify-between gap-3.5 h-full overflow-hidden">
 
             {/* Card 1: Top Categories Highlight */}
             <div className="rounded-2xl border border-purple-200 bg-purple-50/40 p-3.5 sm:p-4 shadow-xs flex flex-col justify-between gap-3 shrink-0 dark:bg-slate-900 dark:border-slate-800">
@@ -179,7 +181,7 @@ export default function Hero({ initialData }) {
                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                           {cat.name}
                         </h5>
-                        <span className="text-[10px] text-slate-400 font-semibold block truncate">
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold block truncate">
                           {cat.productCount ? `${cat.productCount} Items` : "Explore"}
                         </span>
                       </div>

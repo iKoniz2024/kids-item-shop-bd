@@ -14,14 +14,12 @@ export const event = (name, options = {}) => {
       const cleanOptions = {};
 
       const rawVal = Number(options.value);
-      const hasValidValue = !isNaN(rawVal) && rawVal > 0;
+      const val = !isNaN(rawVal) && rawVal > 0 ? Number(rawVal.toFixed(2)) : 1;
+      const curr = String(options.currency || "BDT").toUpperCase().trim();
 
-      if (hasValidValue) {
-        cleanOptions.value = Number(rawVal.toFixed(2));
-        cleanOptions.currency = (options.currency || "BDT").toString().toUpperCase().trim();
-      } else if (["Purchase", "AddToCart", "InitiateCheckout", "ViewContent"].includes(name)) {
-        cleanOptions.value = 1;
-        cleanOptions.currency = (options.currency || "BDT").toString().toUpperCase().trim();
+      if (["Purchase", "AddToCart", "InitiateCheckout", "ViewContent"].includes(name) || options.value !== undefined) {
+        cleanOptions.value = val;
+        cleanOptions.currency = curr.length === 3 ? curr : "BDT";
       }
 
       if (options.content_name) {
@@ -32,7 +30,7 @@ export const event = (name, options = {}) => {
         cleanOptions.content_type = String(options.content_type);
       }
 
-      if (Array.isArray(options.content_ids)) {
+      if (Array.isArray(options.content_ids) && options.content_ids.length > 0) {
         cleanOptions.content_ids = options.content_ids.map((id) => String(id));
       }
 
