@@ -10,7 +10,8 @@ const {
     getBestSellingProducts,
     getNewArrivals,
     getLatestReviews,
-    getFeaturedProducts
+    getFeaturedProducts,
+    getHomeData
 } = require("../controllers/products.controller");
 
 const validate = require("../middlewares/validate");
@@ -24,6 +25,8 @@ const {
 } = require("../validations/product.validation");
 
 const router = express.Router();
+
+router.get("/home-data", getHomeData);
 
 router.get("/flash-sale", getFlashSaleProducts);
 

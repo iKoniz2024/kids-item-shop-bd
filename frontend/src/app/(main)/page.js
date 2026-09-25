@@ -5,16 +5,28 @@ export const metadata = {
   title: "Home",
 };
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 async function fetchHomeData() {
   const baseUrl = getApiUrl();
+
+  try {
+    const res = await fetch(`${baseUrl}/products/home-data`, {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn("Fetch failed for consolidated home data, falling back:", err.message);
+  }
 
   const fetchSafeJson = async (url, fallback) => {
     try {
       const res = await fetch(url, {
         next: { revalidate: 60 },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(6000),
       });
       if (res.ok) {
         return await res.json();

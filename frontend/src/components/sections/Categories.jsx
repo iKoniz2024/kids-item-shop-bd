@@ -11,9 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function CategoriesSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="animate-pulse rounded-2xl border border-border p-4 bg-muted/40 h-28" />
+    <div className="grid grid-cols-3 gap-3.5 sm:grid-cols-4 sm:gap-4 md:grid-cols-6 lg:grid-cols-9">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div key={i} className="flex flex-col items-center gap-2">
+          <div className="aspect-square w-full animate-pulse rounded-full border border-border bg-muted/40" />
+          <div className="h-3 w-16 animate-pulse rounded-md bg-muted/40" />
+        </div>
       ))}
     </div>
   );
@@ -88,13 +91,13 @@ export default function Categories({ initialData }) {
                     href={`/products?category=${cat.slug}`}
                     className="group block text-center"
                   >
-                    <div className="aspect-square overflow-hidden rounded-3xl border-2 border-border group-hover:border-accent bg-secondary/50 p-1.5 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
-                      <div className="h-full w-full overflow-hidden rounded-2xl bg-card p-1 flex items-center justify-center">
+                    <div className="aspect-square overflow-hidden rounded-full border-2 border-primary/20 group-hover:border-primary bg-secondary/50 p-1.5 transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
+                      <div className="h-full w-full overflow-hidden rounded-full bg-card p-1 flex items-center justify-center">
                         {cat.image ? (
                           <img
                             src={cat.image}
                             alt={cat.name}
-                            className="h-full w-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-110"
+                            className="h-full w-full object-cover rounded-full transition-transform duration-300 group-hover:scale-110"
                             loading="lazy"
                           />
                         ) : (

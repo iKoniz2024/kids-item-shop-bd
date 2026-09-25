@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -83,6 +83,8 @@ export default function AdminCategories({ children }) {
     queryKey: ["admin-categories"],
     queryFn: getCategories,
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   const categories = data ?? [];
@@ -339,9 +341,6 @@ export default function AdminCategories({ children }) {
           <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             Categories Hierarchy ({categories.length})
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage main categories and nested sub-categories in expandable tree view
-          </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">

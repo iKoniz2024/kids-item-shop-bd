@@ -13,13 +13,15 @@ export function getApiUrl() {
     return "http://localhost:5000/api";
   }
 
-  let url = process.env.NEXT_PUBLIC_API_URL || process.env.INTERNAL_API_URL;
-
-  if (!url) {
-    url = typeof window !== "undefined" || process.env.NODE_ENV === "production"
-      ? "https://kids-item-shop-backend.vercel.app/api"
-      : "http://localhost:5000/api";
+  if (process.env.INTERNAL_API_URL) {
+    return process.env.INTERNAL_API_URL;
   }
+
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:5000/api";
+  }
+
+  let url = process.env.NEXT_PUBLIC_API_URL || "https://kids-item-shop-backend.vercel.app/api";
 
   url = url.trim().replace(/\/+$/, "");
 

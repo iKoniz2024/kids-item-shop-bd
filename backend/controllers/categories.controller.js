@@ -104,41 +104,44 @@ const createCategory = async (req, res) => {
     }
 };
 
-const getCategoriesWithCounts = async (req, res) => {
-    try {
-        const categoriesWithCounts = await withCache("categoriesWithCounts", 120, async () => {
-            const db = getDB();
-            const categoriesCollection = db.collection("categories");
-            const productsCollection = db.collection("products");
+const getCategoriesWithCountsInternal = async (db) => {
+    return await withCache("categoriesWithCounts", 600, async () => {
+        const categoriesCollection = db.collection("categories");
+        const productsCollection = db.collection("products");
 
-            const categories = await categoriesCollection.find().sort({ sortOrder: 1, name: 1 }).toArray();
+        const categories = await categoriesCollection.find().sort({ sortOrder: 1, name: 1 }).toArray();
 
-            const countResult = await productsCollection.aggregate([
-                {
-                    $project: {
-                        allCats: {
-                            $concatArrays: [
-                                { $cond: [{ $isArray: "$categories" }, "$categories", []] },
-                                { $cond: [{ $ne: ["$primaryCategory", null] }, ["$primaryCategory"], []] },
-                                { $cond: [{ $ne: ["$category", null] }, ["$category"], []] }
-                            ]
-                        }
+        const countResult = await productsCollection.aggregate([
+            {
+                $project: {
+                    allCats: {
+                        $concatArrays: [
+                            { $cond: [{ $isArray: "$categories" }, "$categories", []] },
+                            { $cond: [{ $ne: ["$primaryCategory", null] }, ["$primaryCategory"], []] },
+                            { $cond: [{ $ne: ["$category", null] }, ["$category"], []] }
+                        ]
                     }
-                },
-                { $unwind: "$allCats" },
-                { $group: { _id: "$allCats", count: { $sum: 1 } } }
-            ]).toArray();
+                }
+            },
+            { $unwind: "$allCats" },
+            { $group: { _id: "$allCats", count: { $sum: 1 } } }
+        ]).toArray();
 
-            const countMap = new Map(countResult.map(r => [String(r._id), r.count]));
+        const countMap = new Map(countResult.map(r => [String(r._id), r.count]));
 
-            const withCounts = categories.map(cat => {
-                const count = (countMap.get(String(cat._id)) || 0) + (countMap.get(cat.slug) || 0);
-                return { ...cat, productCount: count };
-            });
-
-            return buildTree(withCounts);
+        const withCounts = categories.map(cat => {
+            const count = (countMap.get(String(cat._id)) || 0) + (countMap.get(cat.slug) || 0);
+            return { ...cat, productCount: count };
         });
 
+        return buildTree(withCounts);
+    });
+};
+
+const getCategoriesWithCounts = async (req, res) => {
+    try {
+        const db = getDB();
+        const categoriesWithCounts = await getCategoriesWithCountsInternal(db);
         res.send(categoriesWithCounts);
     } catch (error) {
         console.error(error);
@@ -169,7 +172,7 @@ const getAllCategories = async (req, res) => {
         }
 
         const cacheKey = `categories_${page}_${limit}_${search}_${status}_${asTree}`;
-        const result = await withCache(cacheKey, 15, async () => {
+        const result = await withCache(cacheKey, 600, async () => {
             if (page && limit) {
                 const skip = (page - 1) * limit;
                 const totalCategories = await categoriesCollection.countDocuments(query);
@@ -315,6 +318,7 @@ module.exports = {
     createCategory,
     getAllCategories,
     getCategoriesWithCounts,
+    getCategoriesWithCountsInternal,
     getSingleCategory,
     updateCategory,
     deleteCategory

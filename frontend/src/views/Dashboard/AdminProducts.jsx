@@ -3,7 +3,7 @@
 import { compressImage } from "@/utils/compressImage";
 import Link from 'next/link';
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -101,17 +101,23 @@ export default function AdminProducts({ children }) {
   const [page, setPage] = useState(1);
   const limit = 10;
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, stockFilter, discountFilter]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
-    queryFn: getProducts,
+    queryFn: () => getProducts({ limit: 1000 }),
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const categories = categoriesData ?? [];
@@ -126,10 +132,17 @@ export default function AdminProducts({ children }) {
         return false;
       }
     }
-    const matchesSearch =
-      product.title.toLowerCase().includes(search.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(search.toLowerCase()) ||
-      product.category?.toLowerCase().includes(search.toLowerCase());
+    const searchTrimmed = search.trim().toLowerCase();
+    const matchesSearch = !searchTrimmed || (
+      (product.title && product.title.toLowerCase().includes(searchTrimmed)) ||
+      (product.brand && product.brand.toLowerCase().includes(searchTrimmed)) ||
+      (product.category && product.category.toLowerCase().includes(searchTrimmed)) ||
+      (product.primaryCategory && product.primaryCategory.toLowerCase().includes(searchTrimmed)) ||
+      (product.sku && product.sku.toLowerCase().includes(searchTrimmed)) ||
+      (product._id && product._id.toString().toLowerCase().includes(searchTrimmed)) ||
+      (Array.isArray(product.tags) && product.tags.some(t => typeof t === 'string' && t.toLowerCase().includes(searchTrimmed))) ||
+      (typeof product.tags === 'string' && product.tags.toLowerCase().includes(searchTrimmed))
+    );
     const matchesCategory = !categoryFilter || product.category === categoryFilter;
     const matchesStock =
       stockFilter === "" ||
@@ -219,7 +232,10 @@ export default function AdminProducts({ children }) {
           totalProducts: (old.totalProducts || 0) + 1,
         };
       });
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["best-selling-products"] });
+      queryClient.invalidateQueries({ queryKey: ["new-arrivals"] });
       setShowForm(false);
       resetForm();
     },
@@ -263,7 +279,10 @@ export default function AdminProducts({ children }) {
       setDeletingId(null);
     },
     onSettled: () => {
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["best-selling-products"] });
+      queryClient.invalidateQueries({ queryKey: ["new-arrivals"] });
     },
   });
 
@@ -399,11 +418,21 @@ export default function AdminProducts({ children }) {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              placeholder="Search by title, category, brand, SKU, tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 pr-9"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
           <div className="flex flex-wrap gap-3">
             <select
@@ -470,7 +499,6 @@ export default function AdminProducts({ children }) {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-foreground">Add New Product</h2>
-                    <p className="text-xs text-muted-foreground">Fill in the details below to add a new product to your store catalog</p>
                   </div>
                 </div>
                 <button

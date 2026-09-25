@@ -553,8 +553,11 @@ const getSingleOrder = async (req, res) => {
         const db = getDB();
         const ordersCollection = db.collection("orders");
 
-        const order = await ordersCollection.findOne({
-            _id: new ObjectId(id)
+        const cacheKey = `order_${id}`;
+        const order = await withCache(cacheKey, 300, async () => {
+            return await ordersCollection.findOne({
+                _id: new ObjectId(id)
+            });
         });
 
         if (!order) {

@@ -15,7 +15,8 @@ import {
   Home,
   Store,
   ShieldCheck,
-  Package
+  Package,
+  X
 } from "lucide-react";
 
 export default function Sidebar({ open, onClose }) {
@@ -112,8 +113,17 @@ export default function Sidebar({ open, onClose }) {
           }`}
       >
         <div>
-          {/* Logo Header */}
-          <div className="py-5 px-2 mb-4 flex items-center justify-center border-b border-border/60 min-h-[110px]">
+          {/* Logo Header & Close Button */}
+          <div className="relative py-5 px-2 mb-4 flex items-center justify-center border-b border-border/60 min-h-[110px]">
+            <button
+              onClick={onClose}
+              className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors lg:hidden"
+              title="Close menu"
+              aria-label="Close menu"
+            >
+              <X className="size-4" />
+            </button>
+
             <Link href="/" className="flex items-center justify-center w-full transition-transform hover:scale-[1.03]">
               {logo ? (
                 <img

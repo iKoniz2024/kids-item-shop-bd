@@ -41,7 +41,6 @@ export default function AdminVendors() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-foreground">Sellers & Vendors Management</h1>
-          <p className="text-sm text-muted-foreground">Approve, suspend, or reject vendor applications and manage registered sellers.</p>
         </div>
 
         {/* Status Filter */}

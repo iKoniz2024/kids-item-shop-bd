@@ -4,7 +4,11 @@ import Script from "next/script";
 import useSettings from "@/hooks/useSettings";
 
 export default function MetaPixel() {
-  const { metaPixels, metaPixelId } = useSettings();
+  const { metaPixels, metaPixelId, isLoading } = useSettings();
+
+  if (isLoading) {
+    return null;
+  }
 
   let pixelIds = [];
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Search, ShoppingCart, Sun, Moon, Menu, X, Phone, Package, House, Store, TrendingUp, Zap, Sparkles, LayoutGrid, ChevronDown, User, LogOut, LayoutDashboard, LogIn } from "lucide-react";
+import { Search, ShoppingCart, Sun, Moon, Menu, X, Phone, Package, House, Store, TrendingUp, Zap, Sparkles, LayoutGrid, ChevronDown, User, LogOut, LayoutDashboard, LogIn, MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
 import useTheme from "@/hooks/useTheme";
@@ -22,6 +22,7 @@ const Navbar = () => {
     const pathname = usePathname();
     const [search, setSearch] = useState("");
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [mobileCatOpen, setMobileCatOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
@@ -73,22 +74,36 @@ const Navbar = () => {
     }, [pathname]);
 
     return (
-        <header className="sticky top-0 z-100 bg-[#7C3AED] text-white border-b border-white/10 shadow-xs dark:bg-slate-950 dark:text-white dark:border-slate-800">
+        <>
+            <header className="sticky top-0 z-100 bg-[#7C3AED] text-white border-b border-white/10 shadow-xs dark:bg-slate-950 dark:text-white dark:border-slate-800">
             {/* Top Header */}
             <div className="bg-[#7C3AED] dark:bg-slate-950">
-                <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4 gap-4">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center shrink-0">
-                        {logo ? (
-                            <img src={logo} alt={siteName || "Logo"} className="h-9 sm:h-12 w-auto object-contain" />
-                        ) : siteName ? (
-                            <span suppressHydrationWarning className="text-xl sm:text-2xl font-black text-white dark:text-accent tracking-tight">
-                                {siteName}
-                            </span>
-                        ) : null}
-                    </Link>
+                <div className="mx-auto flex h-14 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-4 gap-2">
+                    {/* Left: Mobile Menu Button (Mobile) / Desktop Logo */}
+                    <div className="flex items-center gap-2 shrink-0 md:hidden">
+                        <button
+                            onClick={() => setMobileOpen(true)}
+                            className="flex size-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 cursor-pointer"
+                            title="Open Menu"
+                        >
+                            <Menu className="size-5" />
+                        </button>
+                    </div>
 
-                    {/* Eye-Friendly Search Bar */}
+                    {/* Logo (Centered on Mobile, Left-aligned on Desktop) */}
+                    <div className="flex items-center justify-center md:justify-start shrink-0">
+                        <Link href="/" className="flex items-center">
+                            {logo ? (
+                                <img src={logo} alt={siteName || "Logo"} className="h-8 sm:h-12 w-auto object-contain" />
+                            ) : siteName ? (
+                                <span suppressHydrationWarning className="text-lg sm:text-2xl font-black text-white dark:text-accent tracking-tight truncate max-w-[180px] sm:max-w-none">
+                                    {siteName}
+                                </span>
+                            ) : null}
+                        </Link>
+                    </div>
+
+                    {/* Desktop Eye-Friendly Search Bar */}
                     <div className="hidden flex-1 max-w-2xl md:block">
                         <form onSubmit={handleSearchSubmit} className="flex items-center w-full rounded-full border border-white/20 bg-white p-1 focus-within:border-[#EC4899] focus-within:ring-2 focus-within:ring-[#EC4899]/30 transition-all shadow-2xs dark:bg-slate-800 dark:border-slate-700">
                             <input
@@ -109,8 +124,17 @@ const Navbar = () => {
                         </form>
                     </div>
 
-                    {/* Right Utilities */}
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Right Utilities (Mobile & Desktop) */}
+                    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                        {/* Mobile Search Toggle Button */}
+                        <button
+                            onClick={() => setMobileSearchOpen((prev) => !prev)}
+                            className="flex size-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/20 md:hidden cursor-pointer"
+                            title="Toggle Search"
+                        >
+                            <Search className="size-4.5 text-white" />
+                        </button>
+
                         <Link
                             href="/orders"
                             className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-white/20 md:flex shrink-0 shadow-2xs group"
@@ -155,7 +179,7 @@ const Navbar = () => {
 
                         {mounted && (
                             user ? (
-                                <div ref={profileRef} className="relative group/profile">
+                                <div ref={profileRef} className="relative group/profile hidden sm:block">
                                     <button
                                         onClick={() => setProfileOpen((prev) => !prev)}
                                         className="flex size-9 items-center justify-center rounded-full bg-[#EC4899] text-white text-sm font-black shadow-md ring-2 ring-white/30 transition-all duration-200 hover:scale-105 cursor-pointer"
@@ -205,21 +229,36 @@ const Navbar = () => {
                             ) : (
                                 <Link
                                     href="/login"
-                                    className="inline-flex rounded-full btn-action-gold px-5 py-2 text-xs font-black transition-all duration-200 hover:scale-105 shadow-xs"
+                                    className="hidden sm:inline-flex rounded-full btn-action-gold px-5 py-2 text-xs font-black transition-all duration-200 hover:scale-105 shadow-xs"
                                 >
                                     Login
                                 </Link>
                             )
                         )}
-
-                        <button
-                            onClick={() => setMobileOpen(true)}
-                            className="flex size-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
-                        >
-                            <Menu className="size-5" />
-                        </button>
                     </div>
                 </div>
+
+                {/* Expandable Mobile Search Bar */}
+                {mobileSearchOpen && (
+                    <div className="px-3 py-2 bg-[#6D28D9] dark:bg-slate-900 border-t border-white/10 md:hidden">
+                        <form onSubmit={handleSearchSubmit} className="flex items-center w-full rounded-full border border-white/20 bg-white p-1 dark:bg-slate-800 dark:border-slate-700 shadow-sm">
+                            <input
+                                type="text"
+                                placeholder="Search kids toys, clothes, shoes..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                autoFocus
+                                className="w-full h-7 bg-transparent pl-3.5 pr-2 text-xs text-slate-800 dark:text-foreground placeholder:text-muted-foreground outline-none"
+                            />
+                            <button
+                                type="submit"
+                                className="flex h-7 px-4 shrink-0 items-center justify-center rounded-full btn-action-gold text-xs font-bold shadow-xs cursor-pointer"
+                            >
+                                <Search className="size-3.5 text-white" />
+                            </button>
+                        </form>
+                    </div>
+                )}
             </div>
 
             {/* Second Navigation Bar */}
@@ -459,6 +498,81 @@ const Navbar = () => {
                 </div>
             )}
         </header>
+
+        {/* Fixed Mobile Bottom Navigation Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-90 bg-card/95 backdrop-blur-md border-t border-border py-1.5 px-2 md:hidden shadow-lg shadow-black/10">
+            <div className="flex items-center justify-around max-w-md mx-auto">
+                <Link
+                    href="/"
+                    className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 transition-colors ${
+                        pathname === "/" ? "text-primary font-extrabold" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                    <House className="size-5 shrink-0" />
+                    <span className="text-[10px] tracking-tight">Home</span>
+                </Link>
+
+                <button
+                    onClick={() => setMobileOpen(true)}
+                    className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                    <Menu className="size-5 shrink-0" />
+                    <span className="text-[10px] tracking-tight">Menu</span>
+                </button>
+
+                <Link
+                    href="/cart"
+                    className={`relative flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 transition-colors ${
+                        pathname === "/cart" ? "text-primary font-extrabold" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                    <div className="relative">
+                        <ShoppingCart className="size-5 shrink-0" />
+                        {mounted && cartCount > 0 && (
+                            <span className="absolute -right-2 -top-1.5 flex size-4 items-center justify-center rounded-full bg-[#EC4899] text-white text-[9px] font-black shadow-sm">
+                                {cartCount}
+                            </span>
+                        )}
+                    </div>
+                    <span className="text-[10px] tracking-tight">Cart</span>
+                </Link>
+
+                {contactPhone ? (
+                    <a
+                        href={`https://wa.me/${contactPhone.replace(/[^0-9]/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 text-muted-foreground hover:text-emerald-600 transition-colors"
+                    >
+                        <MessageSquare className="size-5 shrink-0 text-emerald-500" />
+                        <span className="text-[10px] tracking-tight">Chat</span>
+                    </a>
+                ) : (
+                    <Link
+                        href="/products"
+                        className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 transition-colors ${
+                            pathname === "/products" ? "text-primary font-extrabold" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <Store className="size-5 shrink-0" />
+                        <span className="text-[10px] tracking-tight">Shop</span>
+                    </Link>
+                )}
+
+                <Link
+                    href={user ? (user.role === "vendor" ? "/dashboard/vendor" : "/dashboard") : "/login"}
+                    className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-1 transition-colors ${
+                        pathname.startsWith("/dashboard") || pathname === "/login"
+                            ? "text-primary font-extrabold"
+                            : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                    <User className="size-5 shrink-0" />
+                    <span className="text-[10px] tracking-tight">{user ? "Account" : "Account"}</span>
+                </Link>
+            </div>
+        </div>
+    </>
     );
 };
 

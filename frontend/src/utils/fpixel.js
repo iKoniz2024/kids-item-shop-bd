@@ -13,10 +13,15 @@ export const event = (name, options = {}) => {
     try {
       const cleanOptions = {};
 
-      if (options.value !== undefined || options.currency !== undefined) {
-        const rawVal = Number(options.value);
-        cleanOptions.value = isNaN(rawVal) ? 0 : Number(rawVal.toFixed(2));
-        cleanOptions.currency = String(options.currency || "BDT").toUpperCase().trim();
+      const rawVal = Number(options.value);
+      const hasValidValue = !isNaN(rawVal) && rawVal > 0;
+
+      if (hasValidValue) {
+        cleanOptions.value = Number(rawVal.toFixed(2));
+        cleanOptions.currency = (options.currency || "BDT").toString().toUpperCase().trim();
+      } else if (["Purchase", "AddToCart", "InitiateCheckout", "ViewContent"].includes(name)) {
+        cleanOptions.value = 1;
+        cleanOptions.currency = (options.currency || "BDT").toString().toUpperCase().trim();
       }
 
       if (options.content_name) {
@@ -36,7 +41,7 @@ export const event = (name, options = {}) => {
       }
 
       Object.keys(options).forEach((key) => {
-        if (!(key in cleanOptions)) {
+        if (!(key in cleanOptions) && key !== "currency" && key !== "value") {
           cleanOptions[key] = options[key];
         }
       });

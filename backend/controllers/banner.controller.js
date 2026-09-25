@@ -35,13 +35,17 @@ const createBanner = async (req, res) => {
     }
 };
 
+const getAllBannersInternal = async (db) => {
+    return await withCache("banners", 600, async () => {
+        const bannersCollection = db.collection("banners");
+        return await bannersCollection.find({}).sort({ createdAt: -1 }).toArray();
+    });
+};
+
 const getAllBanners = async (req, res) => {
     try {
-        const banners = await withCache("banners", 120, async () => {
-            const db = getDB();
-            const bannersCollection = db.collection("banners");
-            return await bannersCollection.find({}).sort({ createdAt: -1 }).toArray();
-        });
+        const db = getDB();
+        const banners = await getAllBannersInternal(db);
         res.send(banners);
     } catch (error) {
         console.log(error);
@@ -109,5 +113,5 @@ const deleteBanner = async (req, res) => {
 };
 
 module.exports = {
-    createBanner, getAllBanners, getSingleBanner, updateBanner, deleteBanner
+    createBanner, getAllBanners, getAllBannersInternal, getSingleBanner, updateBanner, deleteBanner
 };

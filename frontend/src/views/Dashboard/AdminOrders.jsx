@@ -1,14 +1,15 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { Package, Eye, Trash2, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Eye, Trash2, ChevronDown, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { getAllOrders, updateOrderStatus, deleteOrder } from "@/services/order.api";
 import { Button } from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
@@ -34,15 +35,22 @@ const statusColors = {
 export default function AdminOrders({ children }) {
   const { siteName } = useSettings();
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [deletingId, setDeletingId] = useState(null);
   const [page, setPage] = useState(1);
   const limit = 10;
 
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, search]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: getAllOrders,
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   const orders = Array.isArray(data) ? data : data?.orders ?? [];
@@ -111,10 +119,23 @@ export default function AdminOrders({ children }) {
     },
   });
 
-  const filteredOrders =
-    statusFilter === "all"
-      ? orders
-      : orders.filter((o) => o.orderStatus === statusFilter);
+  const filteredOrders = orders.filter((o) => {
+    const matchesStatus = statusFilter === "all" || o.orderStatus === statusFilter;
+    const searchTrimmed = search.trim().toLowerCase();
+    const matchesSearch = !searchTrimmed || (
+      (o._id && o._id.toString().toLowerCase().includes(searchTrimmed)) ||
+      (o.name && o.name.toLowerCase().includes(searchTrimmed)) ||
+      (o.phone && o.phone.toLowerCase().includes(searchTrimmed)) ||
+      (o.shippingAddress?.fullName && o.shippingAddress.fullName.toLowerCase().includes(searchTrimmed)) ||
+      (o.shippingAddress?.phone && o.shippingAddress.phone.toLowerCase().includes(searchTrimmed)) ||
+      (o.shippingAddress?.address && o.shippingAddress.address.toLowerCase().includes(searchTrimmed)) ||
+      (o.shippingAddress?.city && o.shippingAddress.city.toLowerCase().includes(searchTrimmed)) ||
+      (o.orderStatus && o.orderStatus.toLowerCase().includes(searchTrimmed)) ||
+      (o.paymentStatus && o.paymentStatus.toLowerCase().includes(searchTrimmed)) ||
+      (Array.isArray(o.items) && o.items.some(item => item.title && item.title.toLowerCase().includes(searchTrimmed)))
+    );
+    return matchesStatus && matchesSearch;
+  });
 
   const totalPages = Math.ceil(filteredOrders.length / limit);
   const paginatedOrders = filteredOrders.slice((page - 1) * limit, page * limit);
@@ -140,10 +161,29 @@ export default function AdminOrders({ children }) {
       <Helmet>
         <title>{`Admin Orders | ${siteName}`}</title>
       </Helmet>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Orders ({filteredOrders.length})
         </h1>
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by ID, customer, phone, city..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

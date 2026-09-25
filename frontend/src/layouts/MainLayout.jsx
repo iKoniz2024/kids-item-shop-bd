@@ -13,7 +13,7 @@ export default function MainLayout({ children }) {
 
         <Navbar />
 
-        <main className="flex-1">
+        <main className="flex-1 pb-16 md:pb-0">
           {children}
         </main>
 

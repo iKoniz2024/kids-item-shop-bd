@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useMemo, useEffect } from "react";
 import RelatedProducts from "@/components/sections/RelatedProducts";
+import ImageZoom from "@/components/ui/ImageZoom";
 
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -89,7 +90,7 @@ function ProductSkeleton() {
 
 import usePageTitle from "@/hooks/usePageTitle";
 
-export default function ProductDetails({ children }) {
+export default function ProductDetails({ initialProduct }) {
   const { siteName } = useSettings();
   const { id } = useParams();
   const router = useRouter();
@@ -103,10 +104,19 @@ export default function ProductDetails({ children }) {
   const [activeDisplayImage, setActiveDisplayImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
+  const [currentUrl, setCurrentUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: () => getProductById(id),
+    initialData: initialProduct?._id ? initialProduct : undefined,
+    staleTime: 5 * 60 * 1000,
     enabled: !!id,
   });
 
@@ -256,18 +266,19 @@ export default function ProductDetails({ children }) {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left - Images lg:w-[35%] */}
           <div className="flex flex-col gap-3 lg:w-[35%]">
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-secondary/30 p-2">
-              <img
-                src={mainDisplayImage}
-                alt={product.title}
-                className="aspect-square w-full rounded-xl object-cover"
-              />
+            <ImageZoom
+              src={mainDisplayImage}
+              alt={product.title}
+              zoomScale={2.4}
+              containerClassName="rounded-2xl border border-border bg-secondary/30 p-2"
+              className="aspect-square w-full rounded-xl object-contain"
+            >
               {hasDiscount && (
                 <div className="absolute left-3 top-3 z-10 badge-gold px-2.5 py-1 text-xs sm:text-sm shadow-xs">
                   -{Math.round(product.discountPercentage)}%
                 </div>
               )}
-            </div>
+            </ImageZoom>
 
             {allImages.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -512,7 +523,7 @@ export default function ProductDetails({ children }) {
             {/* Social Share */}
             <div className="flex items-center gap-2 pt-2 justify-center">
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`}
+                href={currentUrl ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}` : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
@@ -520,7 +531,7 @@ export default function ProductDetails({ children }) {
                 <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
               </a>
               <a
-                href={`https://twitter.com/intent/tweet?text=${product.title}&url=${window.location.href}`}
+                href={currentUrl ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(product.title)}&url=${encodeURIComponent(currentUrl)}` : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"

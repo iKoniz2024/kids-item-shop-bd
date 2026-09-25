@@ -168,10 +168,10 @@ export default function Hero({ initialData }) {
                         <img
                           src={cat.image}
                           alt={cat.name}
-                          className="size-9 rounded-lg object-cover shrink-0 border border-slate-100 dark:border-slate-700 group-hover:scale-105 transition-transform"
+                          className="size-9 rounded-full object-cover shrink-0 border border-slate-100 dark:border-slate-700 group-hover:scale-105 transition-transform"
                         />
                       ) : (
-                        <div className="size-9 rounded-lg bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
+                        <div className="size-9 rounded-full bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-800/50">
                           <Layers className="size-4 text-purple-600 dark:text-purple-300" />
                         </div>
                       )}

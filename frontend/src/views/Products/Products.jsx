@@ -383,7 +383,7 @@ export default function Products({ initialCategories, initialProducts }) {
 
             <div className="pt-4">
               {showSkeleton ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <ProductSkeleton key={i} />
                   ))}
@@ -403,7 +403,7 @@ export default function Products({ initialCategories, initialProducts }) {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
                   {filteredProducts.map((product, i) => (
                     <ProductCard key={product._id} product={product} index={i} />
                   ))}

@@ -112,11 +112,12 @@ export default function Checkout({ children }) {
   const orderMutation = useMutation({
     mutationFn: createGuestOrder,
     onSuccess: (data) => {
+      const orderTotal = Number(total) > 0 ? Number(total) : Number(totalPrice) > 0 ? Number(totalPrice) : 1;
       trackPixelEvent("Purchase", {
         content_ids: items.map((item) => String(item.productId || item._id)),
         content_type: "product",
         num_items: Number(totalItems) || 1,
-        value: Number(total) || 0,
+        value: orderTotal,
         currency: "BDT",
       });
       toast.success("Order placed successfully! Please check your email (Inbox or Spam) for invoice.", { duration: 6000 });

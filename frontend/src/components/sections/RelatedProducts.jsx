@@ -11,7 +11,7 @@ import { formatBDT } from "@/utils/currency";
 
 function RelatedProductsSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           <div className="relative aspect-square w-full p-2">
@@ -71,10 +71,10 @@ function CompactProductCard({ product, index }) {
           transition: { delay: i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] },
         }),
       }}
-      className="w-[270px] max-w-full aspect-square h-[270px] mx-auto"
+      className="w-full max-w-[270px] h-full mx-auto"
     >
-      <div className="group relative h-[270px] w-full aspect-square overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col">
-        <Link href={`/product/${product._id}`} className="relative h-[64%] w-full overflow-hidden bg-muted/40 block shrink-0 p-2 flex items-center justify-center">
+      <div className="group relative h-full w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col">
+        <Link href={`/product/${product._id}`} className="relative aspect-square w-full overflow-hidden bg-muted/40 block shrink-0 p-2 flex items-center justify-center">
           <img
             src={product.thumbnail || product.images?.[0] || undefined}
             alt={product.title}
@@ -224,7 +224,7 @@ export default function RelatedProducts({ currentProduct }) {
       {isLoading ? (
         <RelatedProductsSkeleton />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {relatedProducts.map((product, i) => (
             <CompactProductCard
               key={product._id}

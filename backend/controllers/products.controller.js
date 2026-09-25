@@ -3,6 +3,8 @@ const { getDB } = require("../config/db");
 const { withCache, clearCache } = require("../utils/cache");
 const { buildIdQuery } = require("../utils/buildIdQuery");
 const { processImageUpload } = require("../utils/uploadHelper");
+const { getCategoriesWithCountsInternal } = require("./categories.controller");
+const { getAllBannersInternal } = require("./banner.controller");
 
 const createProduct = async (req, res) => {
     try {
@@ -117,60 +119,45 @@ const createProduct = async (req, res) => {
     }
 };
 
+const getBestSellingIds = async (db) => {
+    return await withCache("bestSellingIdsSet", 3600, async () => {
+        try {
+            const ordersCollection = db.collection("orders");
+            const topOrders = await ordersCollection
+                .aggregate([
+                    { $sort: { _id: -1 } },
+                    { $limit: 300 },
+                    { $unwind: "$items" },
+                    { $group: { _id: "$items.productId", count: { $sum: 1 } } },
+                    { $sort: { count: -1 } },
+                    { $limit: 20 }
+                ])
+                .toArray();
+            return topOrders.map(item => (item._id ? item._id.toString() : "")).filter(Boolean);
+        } catch (e) {
+            console.error("Error in getBestSellingIds:", e.message);
+            return [];
+        }
+    });
+};
+
 const getBestSellingProductsInternal = async (db) => {
     const productsCollection = db.collection("products");
-    const ordersCollection = db.collection("orders");
-
     let products = [];
     try {
-        products = await ordersCollection
-            .aggregate([
-                { $unwind: "$items" },
-                {
-                    $project: {
-                        productId: {
-                            $cond: {
-                                if: { $eq: [{ $type: "$items.productId" }, "string"] },
-                                then: {
-                                    $convert: {
-                                        input: "$items.productId",
-                                        to: "objectId",
-                                        onError: "$items.productId",
-                                        onNull: "$items.productId"
-                                    }
-                                },
-                                else: "$items.productId"
-                            }
-                        },
-                        quantity: "$items.quantity"
-                    }
-                },
-                {
-                    $group: {
-                        _id: "$productId",
-                        totalSold: { $sum: "$quantity" }
-                    }
-                },
-                { $sort: { totalSold: -1 } },
-                { $limit: 15 },
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                {
-                    $replaceRoot: {
-                        newRoot: {
-                            $mergeObjects: ["$product", { totalSold: "$totalSold" }]
-                        }
-                    }
-                },
-                {
-                    $project: {
+        const topIds = await getBestSellingIds(db);
+        if (topIds.length > 0) {
+            const validObjectIds = [];
+            topIds.forEach(id => {
+                if (ObjectId.isValid(id)) {
+                    validObjectIds.push(new ObjectId(id));
+                }
+            });
+
+            if (validObjectIds.length > 0) {
+                products = await productsCollection
+                    .find({ _id: { $in: validObjectIds } })
+                    .project({
                         description: 0,
                         dimensions: 0,
                         reviews: 0,
@@ -184,12 +171,12 @@ const getBestSellingProductsInternal = async (db) => {
                         weight: 0,
                         availabilityStatus: 0,
                         minimumOrderQuantity: 0
-                    }
-                }
-            ])
-            .toArray();
+                    })
+                    .toArray();
+            }
+        }
     } catch (e) {
-        console.error("Best-selling aggregation failed, using fallback:", e.message);
+        console.error("Best-selling lookup failed:", e.message);
     }
 
     if (!products || products.length === 0) {
@@ -221,13 +208,6 @@ const getBestSellingProductsInternal = async (db) => {
     }));
 };
 
-const getBestSellingIds = async (db) => {
-    return await withCache("bestSellingIdsSet", 30, async () => {
-        const bestProducts = await getBestSellingProductsInternal(db);
-        return Array.from(new Set(bestProducts.map(p => (p._id ? p._id.toString() : ""))));
-    });
-};
-
 const getAllProducts = async (req, res) => {
 
     try {
@@ -247,18 +227,18 @@ const getAllProducts = async (req, res) => {
         const escapeRegex = (str) => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
         if (search && search.trim()) {
-            const cleanSearch = escapeRegex(search.trim());
-            const searchRegex = { $regex: cleanSearch, $options: "i" };
+            const cleanSearch = search.trim();
+            const cleanRegex = { $regex: escapeRegex(cleanSearch), $options: "i" };
             andConditions.push({
                 $or: [
-                    { title: searchRegex },
-                    { category: searchRegex },
-                    { primaryCategory: searchRegex },
-                    { categories: searchRegex },
-                    { brand: searchRegex },
-                    { description: searchRegex },
-                    { tags: searchRegex },
-                    { sku: searchRegex },
+                    { $text: { $search: cleanSearch } },
+                    { title: cleanRegex },
+                    { category: cleanRegex },
+                    { primaryCategory: cleanRegex },
+                    { categories: cleanRegex },
+                    { brand: cleanRegex },
+                    { tags: cleanRegex },
+                    { sku: cleanRegex }
                 ]
             });
         }
@@ -266,32 +246,49 @@ const getAllProducts = async (req, res) => {
         if (category && category.trim()) {
             const categoriesArray = category.split(",").map(c => c.trim()).filter(Boolean);
             if (categoriesArray.length > 0) {
-                const categoryConditions = categoriesArray.flatMap(c => {
-                    const regex = { $regex: `^${escapeRegex(c)}$`, $options: "i" };
+                const categoryMatches = categoriesArray.flatMap(c => {
+                    const clean = escapeRegex(c);
                     return [
-                        { category: regex },
-                        { primaryCategory: regex },
-                        { categories: regex },
-                        { categories: c }
+                        c,
+                        c.toLowerCase(),
+                        c.toUpperCase(),
+                        c.charAt(0).toUpperCase() + c.slice(1),
+                        new RegExp(`^${clean}$`, "i")
                     ];
                 });
-                andConditions.push({ $or: categoryConditions });
+
+                andConditions.push({
+                    $or: [
+                        { category: { $in: categoryMatches } },
+                        { primaryCategory: { $in: categoryMatches } },
+                        { categories: { $in: categoryMatches } }
+                    ]
+                });
             }
         }
 
         if (collection && collection.trim()) {
             const collectionsArray = collection.split(",").map(c => c.trim()).filter(Boolean);
             if (collectionsArray.length > 0) {
+                const collectionMatches = collectionsArray.flatMap(c => [
+                    c,
+                    c.toLowerCase(),
+                    new RegExp(`^${escapeRegex(c)}$`, "i")
+                ]);
                 andConditions.push({
-                    $or: collectionsArray.map(c => ({
-                        collectionIds: { $in: [c, new RegExp(`^${escapeRegex(c)}$`, "i")] }
-                    }))
+                    collectionIds: { $in: collectionMatches }
                 });
             }
         }
 
         if (brand && brand.trim()) {
-            andConditions.push({ brand: { $regex: `^${escapeRegex(brand.trim())}$`, $options: "i" } });
+            const cleanBrand = brand.trim();
+            const brandMatches = [
+                cleanBrand,
+                cleanBrand.toLowerCase(),
+                new RegExp(`^${escapeRegex(cleanBrand)}$`, "i")
+            ];
+            andConditions.push({ brand: { $in: brandMatches } });
         }
 
         if (req.user && req.user.role === "vendor") {
@@ -310,8 +307,8 @@ const getAllProducts = async (req, res) => {
             sortOption = { price: -1 };
         }
 
-        const cacheKey = `products_${page}_${limit}_${search}_${category}_${brand}_${sort}`;
-        const result = await withCache(cacheKey, 15, async () => {
+        const cacheKey = `products_${page}_${limit}_${search}_${category}_${brand}_${collection}_${sort}`;
+        const result = await withCache(cacheKey, 300, async () => {
             const bestSellingIds = await getBestSellingIds(db);
             const bestSellingIdsSet = new Set(bestSellingIds);
 
@@ -394,7 +391,10 @@ const getSingleProduct = async (req, res) => {
         const db = getDB();
         const productsCollection = db.collection("products");
 
-        const result = await productsCollection.findOne(buildIdQuery(id));
+        const cacheKey = `product_${id}`;
+        const result = await withCache(cacheKey, 600, async () => {
+            return await productsCollection.findOne(buildIdQuery(id));
+        });
 
         if (!result) {
             return res.status(404).send({ message: "Product not found" });
@@ -495,7 +495,7 @@ const deleteProduct = async (req, res) => {
 
 const getFlashSaleProducts = async (req, res) => {
     try {
-        const { products, maxStock } = await withCache("flashSaleProducts", 120, async () => {
+        const { products, maxStock } = await withCache("flashSaleProducts", 600, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -548,7 +548,7 @@ const getFlashSaleProducts = async (req, res) => {
 
 const getBestSellingProducts = async (req, res) => {
     try {
-        const result = await withCache("bestSellingProducts", 120, async () => {
+        const result = await withCache("bestSellingProducts", 600, async () => {
             const db = getDB();
             return await getBestSellingProductsInternal(db);
         });
@@ -562,7 +562,7 @@ const getBestSellingProducts = async (req, res) => {
 
 const getNewArrivals = async (req, res) => {
     try {
-        const products = await withCache("newArrivals", 120, async () => {
+        const products = await withCache("newArrivals", 600, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -655,6 +655,92 @@ const getFeaturedProducts = async (req, res) => {
     }
 };
 
+const getHomeData = async (req, res) => {
+    try {
+        const db = getDB();
+        const data = await withCache("consolidatedHomeData", 300, async () => {
+            const productsCollection = db.collection("products");
+
+            const fetchNewArrivals = async () => {
+                return await productsCollection
+                    .find({})
+                    .project({
+                        description: 0,
+                        dimensions: 0,
+                        reviews: 0,
+                        images: 0,
+                        warrantyInformation: 0,
+                        shippingInformation: 0,
+                        returnPolicy: 0,
+                        meta: 0,
+                        tags: 0,
+                        sku: 0,
+                        weight: 0,
+                        availabilityStatus: 0,
+                        minimumOrderQuantity: 0
+                    })
+                    .sort({ _id: -1 })
+                    .limit(12)
+                    .toArray();
+            };
+
+            const fetchFlashSale = async () => {
+                const prods = await productsCollection
+                    .aggregate([
+                        {
+                            $match: {
+                                discountPercentage: { $gte: 50 },
+                                stock: { $gt: 0 }
+                            }
+                        },
+                        {
+                            $project: {
+                                description: 0,
+                                dimensions: 0,
+                                reviews: 0,
+                                images: 0,
+                                warrantyInformation: 0,
+                                shippingInformation: 0,
+                                returnPolicy: 0,
+                                meta: 0,
+                                tags: 0,
+                                sku: 0,
+                                weight: 0,
+                                availabilityStatus: 0,
+                                minimumOrderQuantity: 0
+                            }
+                        },
+                        { $sort: { discountPercentage: -1 } },
+                        { $limit: 8 }
+                    ])
+                    .toArray();
+                return { products: prods, maxStock: 50 };
+            };
+
+            const [categoriesData, newArrivals, bestSellers, flashSaleData, bannersData] = await Promise.all([
+                getCategoriesWithCountsInternal(db).catch(() => []),
+                fetchNewArrivals().catch(() => []),
+                getBestSellingProductsInternal(db).catch(() => []),
+                fetchFlashSale().catch(() => ({ products: [], maxStock: 50 })),
+                getAllBannersInternal(db).catch(() => [])
+            ]);
+
+            return {
+                categoriesData,
+                newArrivalsData: { products: newArrivals },
+                bestSellingData: { products: bestSellers },
+                flashSaleData,
+                bannersData
+            };
+        });
+
+        res.send(data);
+    } catch (error) {
+        console.error("Error fetching home data:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
@@ -665,5 +751,6 @@ module.exports = {
     getBestSellingProducts,
     getNewArrivals,
     getLatestReviews,
-    getFeaturedProducts
+    getFeaturedProducts,
+    getHomeData
 };

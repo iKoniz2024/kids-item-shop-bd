@@ -39,19 +39,19 @@ const warmUpCache = async (db) => {
 
         // 1. Warm up Banners
         const bannersCollection = db.collection("banners");
-        await withCache("banners", 15, async () => {
+        await withCache("banners", 300, async () => {
             return await bannersCollection.find({}).sort({ createdAt: -1 }).toArray();
         });
 
         // 2. Warm up Categories
         const categoriesCollection = db.collection("categories");
-        await withCache("categories_null_null_", 15, async () => {
+        await withCache("categories_null_null_", 300, async () => {
             return await categoriesCollection.find({}).sort({ createdAt: -1 }).toArray();
         });
 
         // 3. Warm up Orders
         const ordersCollection = db.collection("orders");
-        await withCache("orders_null_null_", 15, async () => {
+        await withCache("orders_null_null_", 300, async () => {
             const orders = await ordersCollection.find({})
                 .project({
                     orderStatus: 1,
@@ -91,7 +91,7 @@ const warmUpCache = async (db) => {
 
         // 4. Warm up Products
         const productsCollection = db.collection("products");
-        await withCache("products_null_null____", 15, async () => {
+        await withCache("products_null_null____", 300, async () => {
             const products = await productsCollection.find({})
                 .project({ 
                     description: 0, 
