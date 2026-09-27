@@ -21,8 +21,8 @@ export async function generateMetadata() {
 
   try {
     const res = await fetch(`${apiUrl}/settings`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(10000),
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(3000),
     });
 
     if (res.ok) {
@@ -53,12 +53,25 @@ import Providers from "@/components/Providers";
 import MainLayout from "@/layouts/MainLayout";
 
 export default function RootLayout({ children }) {
+  const apiUrl = getApiUrl();
+  const apiOrigin = apiUrl.startsWith("http") ? new URL(apiUrl).origin : null;
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {apiOrigin && (
+          <>
+            <link rel="preconnect" href={apiOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={apiOrigin} />
+          </>
+        )}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Providers>
           {children}

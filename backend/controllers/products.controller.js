@@ -231,7 +231,6 @@ const getAllProducts = async (req, res) => {
             const cleanRegex = { $regex: escapeRegex(cleanSearch), $options: "i" };
             andConditions.push({
                 $or: [
-                    { $text: { $search: cleanSearch } },
                     { title: cleanRegex },
                     { category: cleanRegex },
                     { primaryCategory: cleanRegex },
@@ -246,22 +245,12 @@ const getAllProducts = async (req, res) => {
         if (category && category.trim()) {
             const categoriesArray = category.split(",").map(c => c.trim()).filter(Boolean);
             if (categoriesArray.length > 0) {
-                const categoryMatches = categoriesArray.flatMap(c => {
-                    const clean = escapeRegex(c);
-                    return [
-                        c,
-                        c.toLowerCase(),
-                        c.toUpperCase(),
-                        c.charAt(0).toUpperCase() + c.slice(1),
-                        new RegExp(`^${clean}$`, "i")
-                    ];
-                });
-
+                const categoryRegexes = categoriesArray.map(c => new RegExp(`^${escapeRegex(c)}$`, "i"));
                 andConditions.push({
                     $or: [
-                        { category: { $in: categoryMatches } },
-                        { primaryCategory: { $in: categoryMatches } },
-                        { categories: { $in: categoryMatches } }
+                        { category: { $in: categoryRegexes } },
+                        { primaryCategory: { $in: categoryRegexes } },
+                        { categories: { $in: categoryRegexes } }
                     ]
                 });
             }
@@ -270,13 +259,9 @@ const getAllProducts = async (req, res) => {
         if (collection && collection.trim()) {
             const collectionsArray = collection.split(",").map(c => c.trim()).filter(Boolean);
             if (collectionsArray.length > 0) {
-                const collectionMatches = collectionsArray.flatMap(c => [
-                    c,
-                    c.toLowerCase(),
-                    new RegExp(`^${escapeRegex(c)}$`, "i")
-                ]);
+                const collectionRegexes = collectionsArray.map(c => new RegExp(`^${escapeRegex(c)}$`, "i"));
                 andConditions.push({
-                    collectionIds: { $in: collectionMatches }
+                    collectionIds: { $in: collectionRegexes }
                 });
             }
         }

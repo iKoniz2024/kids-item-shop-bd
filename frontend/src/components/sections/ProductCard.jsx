@@ -92,13 +92,13 @@ export default function ProductCard({ product, index, badge }) {
         className="w-full max-w-[270px] h-full mx-auto shrink-0"
       >
         <div className={`group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${badgeConfig[effectiveBadge]?.ring ?? ""}`}>
-          <Link href={`/product/${product._id}`} className="relative aspect-square w-full overflow-hidden bg-muted/40 block shrink-0 p-2">
+          <Link href={`/product/${product._id}`} className="relative aspect-square w-full overflow-hidden bg-muted/20 block shrink-0 p-1 sm:p-1.5">
             <ImageZoom
               src={product.thumbnail || product.images?.[0] || undefined}
               alt={product.title}
               zoomScale={1.35}
               containerClassName="h-full w-full"
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
 
             {hasDiscount && (
@@ -135,47 +135,26 @@ export default function ProductCard({ product, index, badge }) {
 
           <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-3 bg-card shrink-0 gap-1.5 sm:gap-2">
             <div className="space-y-1">
-              {/* Star Rating & Shop Name */}
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[8.5px] sm:text-[10px] text-muted-foreground uppercase tracking-wider font-semibold truncate">
-                  {product.shopName || product.shop?.name || siteName}
-                </span>
-                <div className="flex items-center gap-0.5 text-amber-400">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="size-2.5 fill-current" />
-                  ))}
-                </div>
-              </div>
-
               <Link href={`/product/${product._id}`} className="block">
                 <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-foreground group-hover:text-primary dark:group-hover:text-accent transition-colors leading-snug min-h-[2rem] sm:min-h-[2.25rem]">
                   {product.title}
                 </h3>
               </Link>
 
-              <div className="flex items-baseline gap-1.5 flex-wrap pt-0.5">
-                <span className="text-xs sm:text-sm font-extrabold text-primary dark:text-accent">
-                  {formatBDT(hasDiscount ? discountedPrice : product.price)}
-                </span>
-                {hasDiscount && (
-                  <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through font-normal">
-                    {formatBDT(product.price)}
+              <div className="flex items-center justify-between gap-1 pt-0.5">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-xs sm:text-sm font-extrabold text-primary dark:text-accent">
+                    {formatBDT(hasDiscount ? discountedPrice : product.price)}
                   </span>
-                )}
-              </div>
-
-              {/* Stock Progress Bar */}
-              <div className="mt-1 space-y-0.5">
-                <div className="flex items-center justify-between text-[8.5px] sm:text-[10px] text-muted-foreground font-medium">
-                  <span>{stockProgress.label}</span>
-                  <span>{stockProgress.percentage}%</span>
+                  {hasDiscount && (
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through font-normal">
+                      {formatBDT(product.price)}
+                    </span>
+                  )}
                 </div>
-                <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all duration-500"
-                    style={{ width: `${stockProgress.percentage}%` }}
-                  />
-                </div>
+                <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/80 shrink-0">
+                  {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                </span>
               </div>
             </div>
 
@@ -184,7 +163,7 @@ export default function ProductCard({ product, index, badge }) {
                 disabled={isOutOfStock || isAdminOrVendor}
                 onClick={handleDirectAddToCart}
                 title={isAdminOrVendor ? "Admins cannot purchase" : "Add to Cart"}
-                className={`min-w-0 flex-1 flex items-center justify-center gap-1 rounded-full border border-border bg-secondary hover:bg-secondary/80 text-secondary-foreground py-1.5 px-1 sm:px-2 text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-extrabold transition-all ${isOutOfStock || isAdminOrVendor ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} shadow-2xs`}
+                className={`hidden sm:flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-border bg-secondary hover:bg-secondary/80 text-secondary-foreground py-1.5 px-1 sm:px-2 text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-extrabold transition-all ${isOutOfStock || isAdminOrVendor ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} shadow-2xs`}
               >
                 <ShoppingCart className="size-3 shrink-0 text-secondary-foreground" />
                 <span className="truncate whitespace-nowrap">Add to Cart</span>
@@ -193,7 +172,7 @@ export default function ProductCard({ product, index, badge }) {
                 disabled={isOutOfStock || isAdminOrVendor}
                 onClick={handleDirectOrderNow}
                 title={isAdminOrVendor ? "Admins cannot purchase" : "Order Now"}
-                className={`min-w-0 flex-1 flex items-center justify-center gap-1 rounded-full btn-action-gold py-1.5 px-1 sm:px-2 text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-extrabold transition-all duration-200 active:scale-[0.98] ${isOutOfStock || isAdminOrVendor ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} shadow-xs`}
+                className={`w-full sm:flex-1 flex items-center justify-center gap-1 rounded-full btn-action-gold py-1.5 px-1 sm:px-2 text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-extrabold transition-all duration-200 active:scale-[0.98] ${isOutOfStock || isAdminOrVendor ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} shadow-xs`}
               >
                 <Zap className="size-3 fill-current shrink-0" />
                 <span className="truncate whitespace-nowrap">{isOutOfStock ? "Unavailable" : "Order Now"}</span>

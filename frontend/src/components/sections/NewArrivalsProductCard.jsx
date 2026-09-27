@@ -62,7 +62,7 @@ export default function NewArrivalsProductCard({ product, index }) {
         className="shrink-0 w-[160px] xs:w-[185px] sm:w-[265px]"
       >
         <div className="group flex flex-col h-full w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition-all duration-300 hover:shadow-md">
-          <Link href={`/product/${product._id}`} className="relative aspect-square w-full overflow-hidden bg-muted/40 block shrink-0 p-2 flex items-center justify-center">
+          <Link href={`/product/${product._id}`} className="relative aspect-square w-full overflow-hidden bg-muted/20 block shrink-0 p-1 sm:p-1.5 flex items-center justify-center">
             <img
               src={product.thumbnail || product.images?.[0] || null}
               alt={product.title}
@@ -91,15 +91,20 @@ export default function NewArrivalsProductCard({ product, index }) {
                 </h3>
               </Link>
 
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-xs sm:text-sm font-extrabold text-primary dark:text-accent">
-                  {formatBDT(hasDiscount ? discountedPrice : product.price)}
-                </span>
-                {hasDiscount && (
-                  <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through font-normal">
-                    {formatBDT(product.price)}
+              <div className="flex items-center justify-between gap-1 pt-0.5">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-xs sm:text-sm font-extrabold text-primary dark:text-accent">
+                    {formatBDT(hasDiscount ? discountedPrice : product.price)}
                   </span>
-                )}
+                  {hasDiscount && (
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through font-normal">
+                      {formatBDT(product.price)}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground/80 shrink-0">
+                  {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                </span>
               </div>
             </div>
 

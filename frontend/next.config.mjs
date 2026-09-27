@@ -19,7 +19,15 @@ const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL);
 
 const nextConfig = {
   reactStrictMode: true,
-  ...(isVercel ? {} : { output: 'standalone' }),
+  compress: true,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24, // Cache optimized images for 24 hours
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', '@base-ui/react', '@radix-ui/react-slot'],
+  },
+  ...(process.env.BUILD_STANDALONE === 'true' ? { output: 'standalone' } : {}),
   async redirects() {
     return [
       {
