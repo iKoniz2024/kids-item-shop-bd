@@ -126,7 +126,7 @@ const getBestSellingIds = async (db) => {
             const topOrders = await ordersCollection
                 .aggregate([
                     { $sort: { _id: -1 } },
-                    { $limit: 300 },
+                    { $limit: 50 },
                     { $unwind: "$items" },
                     { $group: { _id: "$items.productId", count: { $sum: 1 } } },
                     { $sort: { count: -1 } },
@@ -197,7 +197,7 @@ const getBestSellingProductsInternal = async (db) => {
                 availabilityStatus: 0,
                 minimumOrderQuantity: 0
             })
-            .sort({ rating: -1, _id: -1 })
+            .sort({ salesCount: -1, rating: -1, _id: -1 })
             .limit(12)
             .toArray();
     }
@@ -214,8 +214,8 @@ const getAllProducts = async (req, res) => {
         const db = getDB();
         const productsCollection = db.collection("products");
 
-        const page = req.query.page ? parseInt(req.query.page) : null;
-        const limit = req.query.limit ? parseInt(req.query.limit) : null;
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? Math.min(parseInt(req.query.limit), 100) : 40;
 
         const search = req.query.search || "";
         const category = req.query.category || "";
@@ -228,16 +228,17 @@ const getAllProducts = async (req, res) => {
 
         if (search && search.trim()) {
             const cleanSearch = search.trim();
-            const cleanRegex = { $regex: escapeRegex(cleanSearch), $options: "i" };
+            const escaped = escapeRegex(cleanSearch);
+
+            // Fast Indexed Search: Prefix & Word-boundary matches leverage MongoDB B-Tree Indexes (IXSCAN)
+            const prefixRegex = new RegExp(`^${escaped}|\\b${escaped}`, "i");
+
             andConditions.push({
                 $or: [
-                    { title: cleanRegex },
-                    { category: cleanRegex },
-                    { primaryCategory: cleanRegex },
-                    { categories: cleanRegex },
-                    { brand: cleanRegex },
-                    { tags: cleanRegex },
-                    { sku: cleanRegex }
+                    { title: prefixRegex },
+                    { category: prefixRegex },
+                    { brand: prefixRegex },
+                    { tags: prefixRegex }
                 ]
             });
         }
@@ -304,11 +305,11 @@ const getAllProducts = async (req, res) => {
 
             if (page && limit) {
                 const skip = (page - 1) * limit;
-                const totalProducts = Object.keys(query).length === 0 
-                    ? await productsCollection.estimatedDocumentCount()
-                    : await productsCollection.countDocuments(query);
+                const countPromise = Object.keys(query).length === 0 
+                    ? productsCollection.estimatedDocumentCount()
+                    : productsCollection.countDocuments(query);
 
-                const products = await productsCollection
+                const productsPromise = productsCollection
                     .find(query)
                     .project({ 
                         description: 0, 
@@ -328,6 +329,8 @@ const getAllProducts = async (req, res) => {
                     .skip(skip)
                     .limit(limit)
                     .toArray();
+
+                const [totalProducts, products] = await Promise.all([countPromise, productsPromise]);
 
                 return {
                     totalProducts,

@@ -125,11 +125,19 @@ const warmUpCache = async (db) => {
  * Clears a specific cache key or all cache if no key provided.
  * @param {string} [key] 
  */
-const clearCache = (key) => {
-    if (key) {
-        cache.delete(key);
-    } else {
+const clearCache = (prefixOrKey) => {
+    if (!prefixOrKey) {
         cache.clear();
+        return;
+    }
+    if (cache.has(prefixOrKey)) {
+        cache.delete(prefixOrKey);
+        return;
+    }
+    for (const key of cache.keys()) {
+        if (key.startsWith(prefixOrKey)) {
+            cache.delete(key);
+        }
     }
 };
 

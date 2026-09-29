@@ -59,7 +59,7 @@ export default function NewArrivalsProductCard({ product, index }) {
             transition: { delay: i * 0.05, duration: 0.3 },
           }),
         }}
-        className="shrink-0 w-[160px] xs:w-[185px] sm:w-[265px]"
+        className="w-full lg:shrink-0 lg:w-[265px]"
       >
         <div className="group flex flex-col h-full w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xs transition-all duration-300 hover:shadow-md">
           <Link href={`/product/${product._id}`} className="relative aspect-square w-full overflow-hidden bg-muted/20 block shrink-0 p-1 sm:p-1.5 flex items-center justify-center">

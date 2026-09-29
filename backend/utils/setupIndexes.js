@@ -25,6 +25,7 @@ const setupIndexes = async (db) => {
         await productsCollection.createIndex({ price: 1 });
         await productsCollection.createIndex({ price: -1 });
         await productsCollection.createIndex({ discountPercentage: -1 });
+        await productsCollection.createIndex({ salesCount: -1 });
         await productsCollection.createIndex({ rating: -1 });
         await productsCollection.createIndex({ title: 1 });
         await productsCollection.createIndex({ tags: 1 });

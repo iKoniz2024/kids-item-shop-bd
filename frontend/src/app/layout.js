@@ -22,7 +22,7 @@ export async function generateMetadata() {
   try {
     const res = await fetch(`${apiUrl}/settings`, {
       next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(500),
     });
 
     if (res.ok) {
@@ -49,6 +49,7 @@ export async function generateMetadata() {
   return defaultMetadata;
 }
 
+import NextTopLoader from "nextjs-toploader";
 import Providers from "@/components/Providers";
 import MainLayout from "@/layouts/MainLayout";
 
@@ -73,6 +74,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <NextTopLoader color="#8b5cf6" showSpinner={false} height={3} crawl={true} speed={200} />
         <Providers>
           {children}
         </Providers>

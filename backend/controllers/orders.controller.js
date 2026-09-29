@@ -496,9 +496,9 @@ const getAllOrders = async (req, res) => {
 
             if (page && limit) {
                 const skip = (page - 1) * limit;
-                const totalOrders = await ordersCollection.countDocuments(query);
+                const countPromise = ordersCollection.countDocuments(query);
 
-                const orders = await ordersCollection
+                const ordersPromise = ordersCollection
                     .find(query)
                     .project(listProjection)
                     .sort({
@@ -507,6 +507,8 @@ const getAllOrders = async (req, res) => {
                     .skip(skip)
                     .limit(limit)
                     .toArray();
+
+                const [totalOrders, orders] = await Promise.all([countPromise, ordersPromise]);
 
                 return {
                     totalOrders,
@@ -855,7 +857,7 @@ const sendInvoiceEmail = async (order, targetEmail = null) => {
                                             <table width="100%" cellpadding="0" cellspacing="0">
                                                 <tr>
                                                     <td style="font-size:13px;color:#888;">Subtotal</td>
-                                                    <td align="right" style="font-size:13px;color:#555;">৳${Number(order.subtotal).toFixed(2)}</td>
+                                                    <td align="right" style="font-size:13px;color:#555;">৳${Number(order.subtotal || order.totalPrice || 0).toFixed(2)}</td>
                                                 </tr>
                                             </table>
                                         </td>
@@ -865,7 +867,7 @@ const sendInvoiceEmail = async (order, targetEmail = null) => {
                                             <table width="100%" cellpadding="0" cellspacing="0">
                                                 <tr>
                                                     <td style="font-size:13px;color:#888;">Shipping (${shippingLabel})</td>
-                                                    <td align="right" style="font-size:13px;color:${order.shippingCost > 0 ? "#555" : "#22c55e"};font-weight:500;">${order.shippingCost > 0 ? "৳" + Number(order.shippingCost).toFixed(2) : "Free"}</td>
+                                                    <td align="right" style="font-size:13px;color:${(Number(order.shippingCost) || 0) > 0 ? "#555" : "#22c55e"};font-weight:500;">${(Number(order.shippingCost) || 0) > 0 ? "৳" + Number(order.shippingCost || 0).toFixed(2) : "Free"}</td>
                                                 </tr>
                                             </table>
                                         </td>
@@ -875,7 +877,7 @@ const sendInvoiceEmail = async (order, targetEmail = null) => {
                                             <table width="100%" cellpadding="0" cellspacing="0">
                                                 <tr>
                                                     <td style="font-size:16px;font-weight:700;color:#0B3C73;">Total</td>
-                                                    <td align="right" style="font-size:18px;font-weight:700;color:#0B3C73;">৳${Number(order.totalPrice).toFixed(2)}</td>
+                                                    <td align="right" style="font-size:18px;font-weight:700;color:#0B3C73;">৳${Number(order.totalPrice || 0).toFixed(2)}</td>
                                                 </tr>
                                             </table>
                                         </td>
@@ -962,16 +964,15 @@ const sendInvoice = async (req, res) => {
         }
 
         const email = req.body?.email || order.shippingAddress?.email || order.guestEmail || order.email;
-        if (!email) {
-            return res.status(400).send({ message: "No email address found for this order" });
+        if (!email || !String(email).trim()) {
+            return res.send({ message: "No email address provided, skipped invoice email" });
         }
 
-        const mailResult = await sendInvoiceEmail(order, email);
-        if (!mailResult) {
-            return res.status(500).send({ message: "Failed to send invoice email via SMTP" });
-        }
-
-        res.send({ message: "Invoice sent successfully", mailResult });
+        const mailResult = await sendInvoiceEmail(order, String(email).trim());
+        return res.send({
+            message: mailResult ? "Invoice sent successfully" : "Order processed, invoice email skipped",
+            mailResult: !!mailResult
+        });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to send invoice" });

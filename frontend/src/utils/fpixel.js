@@ -14,12 +14,17 @@ export const event = (name, options = {}) => {
       const cleanOptions = {};
 
       const rawVal = Number(options.value);
-      const val = !isNaN(rawVal) && rawVal > 0 ? Number(rawVal.toFixed(2)) : 1;
-      const curr = String(options.currency || "BDT").toUpperCase().trim();
+      const val = !isNaN(rawVal) && rawVal >= 0 ? Number(rawVal.toFixed(2)) : 0;
+      
+      // Meta Browser Pixel SDK (fbevents.js) unsupported currencies like BDT trigger invalid currency errors.
+      // We map unsupported browser currencies to 'USD' for client-side fbq while CAPI handles BDT on backend.
+      const fbSupportedCurrencies = ["USD", "EUR", "GBP", "INR", "AUD", "CAD", "SGD", "AED", "SAR"];
+      const rawCurr = String(options.currency || "USD").replace(/[^a-zA-Z]/g, "").toUpperCase();
+      const curr = fbSupportedCurrencies.includes(rawCurr) ? rawCurr : "USD";
 
       if (["Purchase", "AddToCart", "InitiateCheckout", "ViewContent"].includes(name) || options.value !== undefined) {
         cleanOptions.value = val;
-        cleanOptions.currency = curr.length === 3 ? curr : "BDT";
+        cleanOptions.currency = curr;
       }
 
       if (options.content_name) {

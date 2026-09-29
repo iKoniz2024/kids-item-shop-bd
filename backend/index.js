@@ -1,4 +1,5 @@
 const express = require("express");
+const compression = require("compression");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
@@ -22,6 +23,7 @@ const collectionRoutes = require("./routes/collections.route");
 const { rateLimiter } = require("./middlewares/rateLimiter");
 
 const app = express();
+app.use(compression());
 const port = process.env.PORT || 5000;
 
 const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, "") : "";
@@ -79,6 +81,17 @@ app.use("/api/vendors", vendorRoutes);
 
 app.get("/", (req, res) => {
     res.send("Kids Item Shop Server is Running...");
+});
+
+// Centralized Express Error Handler
+app.use((err, req, res, next) => {
+    console.error("Unhandled Error:", err.stack || err.message || err);
+    if (res.headersSent) {
+        return next(err);
+    }
+    res.status(err.status || 500).json({
+        message: err.message || "Internal Server Error"
+    });
 });
 
 if (process.env.VERCEL) {

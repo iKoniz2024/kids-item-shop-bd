@@ -12,9 +12,9 @@ import NewArrivalsProductCard from "./NewArrivalsProductCard";
 
 function NewArrivalsSkeleton() {
   return (
-    <div className="flex gap-3 overflow-hidden">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:flex lg:gap-4 lg:overflow-hidden">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="shrink-0 w-40 sm:w-45">
+        <div key={i} className="w-full lg:shrink-0 lg:w-[265px]">
           <Skeleton className="aspect-square w-full rounded-lg" />
           <div className="mt-2 space-y-2">
             <Skeleton className="h-4 w-3/4" />
@@ -64,7 +64,7 @@ export default function NewArrivals({ initialData }) {
             <button
               onClick={() => scroll("left")}
               aria-label="Previous products"
-              className="hidden sm:flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
+              className="hidden lg:flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -74,7 +74,7 @@ export default function NewArrivals({ initialData }) {
             <button
               onClick={() => scroll("right")}
               aria-label="Next products"
-              className="hidden sm:flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
+              className="hidden lg:flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
             >
               <ChevronRight className="size-4" />
             </button>
@@ -96,7 +96,7 @@ export default function NewArrivals({ initialData }) {
         ) : (
           <div
             ref={scrollRef}
-            className="-mx-4 -my-3 flex gap-3.5 overflow-x-auto overflow-y-hidden px-4 py-3 sm:gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:flex lg:gap-4 lg:-mx-4 lg:-my-3 lg:overflow-x-auto lg:overflow-y-hidden lg:px-4 lg:py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             {products.map((product, i) => (
               <NewArrivalsProductCard key={product._id} product={product} index={i} />

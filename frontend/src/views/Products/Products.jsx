@@ -109,8 +109,8 @@ export default function Products({ initialCategories, initialProducts }) {
   }, [selectedCategory, categories]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["products", { search: searchQuery, category: activeCategorySlugs, sort, page, limit }],
-    queryFn: () => getProducts({ search: searchQuery, category: activeCategorySlugs, sort, page, limit }),
+    queryKey: ["products", { search: searchQuery, category: activeCategorySlugs, sort, page, limit: searchQuery ? 100 : limit }],
+    queryFn: () => getProducts({ search: searchQuery, category: activeCategorySlugs, sort, page: searchQuery ? 1 : page, limit: searchQuery ? 100 : limit }),
     placeholderData: keepPreviousData,
     initialData: (!searchQuery && !activeCategorySlugs && sort === "newest" && page === 1 && initialProducts?.products?.length > 0) ? initialProducts : undefined,
   });
@@ -410,7 +410,7 @@ export default function Products({ initialCategories, initialProducts }) {
                 </div>
               )}
 
-              {!showSkeleton && totalPages > 1 && (
+              {!showSkeleton && !searchQuery && totalPages > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-4">
                   <Button
                     variant="outline"
